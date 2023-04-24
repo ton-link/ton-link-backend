@@ -21,7 +21,6 @@ const connector = new TonhubConnector({
 });
 
 const ORACLE_ADDRESS = (process.env).ORACLE_ADDRESS;
-const JMINTER = (process.env).JMINTER;
 
 let cache = {};
 
@@ -47,34 +46,23 @@ app.get("/api/formatAddress", async (req, res) => {
 });
 
 app.get("/api/stake", async (req, res) => {
-  req.query.address = new Address(req.query.address).toString("base64", {
-    bounceable: true,
-  });
-  let jWallet = await fetch(
-    `https://testnet.api.ton.cat/contracts/jetton_minter/${JMINTER}/wallet/${req.query.address}`
-  );
-  jWallet = await jWallet.json();
   const body = new Builder()
-    .storeUint(0x0f8a7ea5, 32)
-    .storeUint(40, 64)
-    .storeCoins(new Coins(Number(req.query.amount), false))
-    .storeAddress(new Address(ORACLE_ADDRESS))
-    .storeAddress(null)
-    .storeInt(0, 1)
-    .storeCoins(new Coins("0.1", false))
-    .storeBit(1)
-    .cell();
-
+    .storeUint(40, 32)
+    .storeUint(0, 64)
+  .cell();
   const bodyBOC = BOC.toBase64Standard(body);
 
   res.json({
     boc: bodyBOC,
-    wallet: jWallet.address,
+    wallet: ORACLE_ADDRESS,
   });
 });
 
 app.get("/api/pause", async (req, res) => {
-  const body = new Builder().storeUint(140, 32).storeUint(0, 64).cell();
+  const body = new Builder()
+    .storeUint(140, 32)
+    .storeUint(0, 64)
+  .cell();
 
   const bodyBOC = BOC.toBase64Standard(body);
 
@@ -263,7 +251,7 @@ app.get("/api/getJobById", async (req, res) => {
 app.get("/api/connectTonhub", async (req, res) => {
   let link = await connector.createNewSession({
     name: "TON Link",
-    url: "https://example.com",
+    url: "https://tonlink.xyz",
   });
   res.json({
     link: link.link,
